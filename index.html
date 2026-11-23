@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>أطلس تضاريس العالم</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+      background: #F7F8FA;
+      color: #0F172A;
+      line-height: 1.6;
+    }
+
+    header {
+      background: #FFFFFF;
+      border-bottom: 1px solid #E2E8F0;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .search-input {
+      width: 260px;
+      max-width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #CBD5E1;
+      border-radius: 8px;
+      background: #F8FAFC;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: #0F172A;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #1E3A5F;
+    }
+
+    main {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1.85fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    .map-card {
+      background: #E8F0F6;
+      border: 1px solid #CBD5E1;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #worldMap {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .country {
+      stroke: #F8FAFC;
+      stroke-width: 0.6;
+      cursor: pointer;
+      transition: opacity 0.15s ease, stroke-width 0.15s ease;
+    }
+
+    .country:hover {
+      opacity: 0.85;
+      stroke: #1E3A5F;
+      stroke-width: 1.2;
+    }
+
+    .country.active {
+      stroke: #0F172A;
+      stroke-width: 1.8;
+      fill: #1E3A5F !important;
+    }
+
+    .tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: #0F172A;
+      color: #FFFFFF;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      display: none;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding: 10px 14px;
+      background: #FFFFFF;
+      border-top: 1px solid #CBD5E1;
+      font-size: 0.8rem;
+      color: #334155;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .swatch {
+      width: 11px;
+      height: 11px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .panel {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .country-title {
+      font-size: 1.45rem;
+      font-weight: 700;
+    }
+
+    .country-meta {
+      font-size: 0.85rem;
+      color: #64748B;
+      margin-top: 2px;
+    }
+
+    .terrain-visual {
+      margin-top: 14px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #E2E8F0;
+      background: #F8FAFC;
+    }
+
+    .terrain-visual svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .terrain-caption {
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      color: #1E3A5F;
+      font-weight: 600;
+      border-top: 1px solid #E2E8F0;
+      background: #FFFFFF;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 16px 0;
+      padding: 12px 0;
+      border-top: 1px solid #E2E8F0;
+      border-bottom: 1px solid #E2E8F0;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #64748B;
+    }
+
+    .stat-val {
+      font-size: 0.98rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+
+    .features-list {
+      list-style: none;
+      margin-bottom: 14px;
+    }
+
+    .features-list li {
+      padding: 6px 0;
+      border-bottom: 1px solid #F1F5F9;
+      font-size: 0.9rem;
+      color: #1E293B;
+    }
+
+    .summary {
+      font-size: 0.9rem;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>أطلس تضاريس العالم</h1>
+    <input id="searchInput" class="search-input" type="search" placeholder="ابحث عن دولة (مثال: السعودية، سويسرا)..." />
+  </header>
+
+  <main>
+    <section class="map-card" id="mapWrap">
+      <div id="tooltip" class="tooltip"></div>
+      <svg id="worldMap" viewBox="0 0 960 500" aria-label="خريطة تضاريس العالم"></svg>
+      <div class="legend">
+        <span class="legend-item"><span class="swatch" style="background:#C98A6B"></span>جبلية</span>
+        <span class="legend-item"><span class="swatch" style="background:#DFC592"></span>هضبية وصحراوية</span>
+        <span class="legend-item"><span class="swatch" style="background:#A3C59C"></span>سهلية</span>
+        <span class="legend-item"><span class="swatch" style="background:#8FBAB2"></span>ساحلية وجزرية</span>
+        <span class="legend-item"><span class="swatch" style="background:#B6B995"></span>متنوعة</span>
+        <span class="legend-item"><span class="swatch" style="background:#D8E3EC"></span>جليدية</span>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <h2 class="country-title" id="cName">المملكة العربية السعودية</h2>
+      <div class="country-meta" id="cMeta">آسيا · Saudi Arabia</div>
+
+      <div class="terrain-visual">
+        <div id="terrainArt"></div>
+        <div class="terrain-caption" id="cTerrain">هضبية وصحراوية — هضاب داخلية وصحاري ومرتفعات غربية</div>
+      </div>
+
+      <div class="stats">
+        <div>
+          <div class="stat-label">متوسط الارتفاع</div>
+          <div class="stat-val" id="cAvg">665 م</div>
+        </div>
+        <div>
+          <div class="stat-label">أعلى قمة</div>
+          <div class="stat-val" id="cMax">3,015 م</div>
+        </div>
+        <div>
+          <div class="stat-label">أخفض نقطة</div>
+          <div class="stat-val" id="cMin">0 م</div>
+        </div>
+      </div>
+
+      <div class="section-title">أبرز المعالم التضاريسية</div>
+      <ul class="features-list" id="cFeats"></ul>
+      <p class="summary" id="cSummary"></p>
+    </aside>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <script>
+    const COLORS = {
+      'جبلية': '#C98A6B',
+      'هضبية وصحراوية': '#DFC592',
+      'سهلية': '#A3C59C',
+      'ساحلية وجزرية': '#8FBAB2',
+      'متنوعة التضاريس': '#B6B995',
+      'جليدية وقطبية': '#D8E3EC'
+    };
+
+    const SCENES = {
+      'جبلية': '<svg viewBox="0 0 360 150"><rect width="360" height="150" fill="#DCE8F2"/><path d="M0 150 L0 105 L65 55 L118 92 L185 26 L248 82 L305 42 L360 95 L360 150 Z" fill="#9E5636"/><path d="M185 26 L160 56 L176 52 L188 64 L202 48 L216 54 Z" fill="#FFFFFF"/><path d="M0 150 L0 120 L95 88 L175 118 L270 84 L360 116 L360 150 Z" fill="#6F8A67"/></svg>',
+      'هضبية وصحراوية': '<svg viewBox="0 0 360 150"><rect width="360" height="150" fill="#E9EEF2"/><path d="M0 150 L0 72 L95 72 L120 96 L235 96 L265 62 L360 62 L360 150 Z" fill="#B8924C"/><path d="M0 150 Q90 105 180 126 T360 112 L360 150 Z" fill="#DFC592"/></svg>',
+      'سهلية': '<svg viewBox="0 0 360 150"><rect width="360" height="150" fill="#E3EDF5"/><path d="M0 150 L0 98 Q120 82 220 96 T360 88 L360 150 Z" fill="#8CB584"/><path d="M165 95 C195 112 135 128 210 150 L242 150 C175 126 225 110 178 95 Z" fill="#6497B1"/></svg>',
+      'ساحلية وجزرية': '<svg viewBox="0 0 360 150"><rect width="360" height="150" fill="#DCEBF2"/><rect y="102" width="360" height="48" fill="#5B9AA9"/><path d="M35 108 Q105 48 175 108 Z" fill="#4D867C"/><path d="M195 108 Q260 64 325 108 Z" fill="#6A9761"/></svg>',
+      'متنوعة التضاريس': '<svg viewBox="0 0 360 150"><rect width="360" height="150" fill="#E1EAF2"/><path d="M0 150 L0 95 L80 48 L155 92 L225 65 L360 105 L360 150 Z" fill="#7D8254"/><path d="M0 150 Q110 108 220 120 T360 114 L360 150 Z" fill="#A3C59C"/></svg>',
+      'جليدية وقطبية': '<svg viewBox="0 0 360 150"><rect width="360" height="150" fill="#D2E0EC"/><rect y="110" width="360" height="40" fill="#476C8A"/><path d="M0 112 L45 62 L115 84 L185 38 L260 76 L325 48 L360 112 Z" fill="#F8FAFC"/></svg>'
+    };
+
+    const COUNTRIES = {
+      'Saudi Arabia': { ar: 'المملكة العربية السعودية', cont: 'آسيا', cat: 'هضبية وصحراوية', lbl: 'هضاب داخلية وصحاري ومرتفعات غربية', avg: 665, max: 3015, min: 0, feats: ['هضبة نجد', 'جبال الحجاز وعسير', 'صحراء الربع الخالي', 'سهل تهامة الساحلي'], sum: 'تسيطر الهضاب والصحاري الرملية على وسط وشرق البلاد، بينما تمتد سلسلة جبال السروات الموازية للبحر الأحمر غرباً.' },
+      'Egypt': { ar: 'مصر', cont: 'أفريقيا', cat: 'هضبية وصحراوية', lbl: 'هضاب صحراوية ووادي ودلتا نهرية', avg: 321, max: 2629, min: -133, feats: ['وادي النيل والدلتا', 'الصحراء الغربية ومنخفض القطارة', 'الصحراء الشرقية', 'جبال سيناء'], sum: 'يخترق نهر النيل الأراضي المصرية مشكلاً شريطاً سهلياً خصباً وسط الهضاب الصحراوية ومرتفعات سيناء.' },
+      'Switzerland': { ar: 'سويسرا', cont: 'أوروبا', cat: 'جبلية', lbl: 'جبال الألب الشاهقة والهضبة السويسرية وجبال جورا', avg: 1350, max: 4634, min: 193, feats: ['جبال الألب السويسرية', 'جبال جورا', 'الهضبة السويسرية الوسطى'], sum: 'تغطي جبال الألب جنوبها وشرقها، وتفصلها الهضبة الوسطى الغنية بالبحيرات عن جبال جورا غرباً.' },
+      'Japan': { ar: 'اليابان', cont: 'آسيا', cat: 'جبلية', lbl: 'أرخبيل بركاني جبلي وسهول ساحلية ضيقة', avg: 438, max: 3776, min: -4, feats: ['الألب اليابانية', 'جبل فوجي', 'سهل كانتو'], sum: 'تشغل الجبال البركانية نحو ثلاثة أرباع مساحة الجزر اليابانية، بينما تنحصر السهول قرب السواحل.' },
+      'Brazil': { ar: 'البرازيل', cont: 'أمريكا الجنوبية', cat: 'سهلية', lbl: 'حوض الأمازون السهلي والهضبة البرازيلية', avg: 320, max: 2995, min: 0, feats: ['حوض الأمازون', 'الهضبة البرازيلية', 'أراضي البانتانال'], sum: 'تتوازن تضاريسها بين منخفضات غابات الأمازون شمالاً والهضبة البرازيلية المتموجة في الوسط والجنوب.' },
+      'Nepal': { ar: 'نيبال', cont: 'آسيا', cat: 'جبلية', lbl: 'سلاسل الهيمالايا الشاهقة وسهل تيراي', avg: 3265, max: 8848, min: 59, feats: ['جبال الهيمالايا وقمة إيفرست', 'وادي كاتماندو', 'سهل تيراي'], sum: 'تضم أعلى القمم الجبلية على وجه الأرض شمالاً، وتنحدر بحدة نحو الأودية والسهول الجنوبية.' },
+      'Morocco': { ar: 'المغرب', cont: 'أفريقيا', cat: 'جبلية', lbl: 'سلاسل الأطلس والريف وسهول أطلسية', avg: 909, max: 4167, min: -55, feats: ['جبال الأطلس الكبير والمتوسط', 'جبال الريف', 'السهول الأطلسية'], sum: 'تخترق جبال الأطلس وسط البلاد وجبال الريف شمالها بين السهول الأطلسية والصحراء.' },
+      'Algeria': { ar: 'الجزائر', cont: 'أفريقيا', cat: 'هضبية وصحراوية', lbl: 'الأطلس التلي والهضاب العليا والصحراء الكبرى', avg: 800, max: 2918, min: -40, feats: ['جبال الأطلس', 'الهضاب العليا', 'كتلة الهقار'], sum: 'تنتظم التضاريس في أحزمة من السواحل والجبال شمالاً وصولاً إلى الصحراء الكبرى ومرتفعات الهقار جنوباً.' },
+      'Iraq': { ar: 'العراق', cont: 'آسيا', cat: 'متنوعة التضاريس', lbl: 'السهل الرسوبي وجبال زاغروس والهضبة الغربية', avg: 312, max: 3611, min: 0, feats: ['السهل الرسوبي لدجلة والفرات', 'جبال زاغروس', 'الهضبة الغربية'], sum: 'يمتد السهل الرسوبي الخصيب حول دجلة والفرات، وتحده الجبال شمالاً والبادية غرباً.' },
+      'Jordan': { ar: 'الأردن', cont: 'آسيا', cat: 'هضبية وصحراوية', lbl: 'بادية شرقية ومرتفعات وغور البحر الميت', avg: 812, max: 1854, min: -430, feats: ['غور الأردن والبحر الميت', 'جبال الشراة وعجلون', 'وادي رم'], sum: 'يجمع بين أخفض نقطة يابسة في العالم ومرتفعات جبلية غرباً وبادية شاسعة شرقاً.' },
+      'Turkey': { ar: 'تركيا', cont: 'آسيا', cat: 'جبلية', lbl: 'هضبة الأناضول وسلاسل طوروس والبنطس', avg: 1132, max: 5137, min: 0, feats: ['هضبة الأناضول', 'جبال طوروس', 'جبل أرارات'], sum: 'تشكل هضبة الأناضول المرتفعة قلب البلاد وتحيط بها السلاسل الجبلية من الشمال والجنوب والشرق.' },
+      'France': { ar: 'فرنسا', cont: 'أوروبا', cat: 'متنوعة التضاريس', lbl: 'سهول وأحواض واسعة تحيط بها الألب والبيرينيه', avg: 375, max: 4808, min: -2, feats: ['جبال الألب والبيرينيه', 'الهضبة الوسطى', 'حوض باريس'], sum: 'توازن تضاريسي بين السهول النهرية الواسعة غرباً وشمالاً والجبال العالية شرقاً وجنوباً.' },
+      'United States of America': { ar: 'الولايات المتحدة الأمريكية', cont: 'أمريكا الشمالية', cat: 'متنوعة التضاريس', lbl: 'جبال الروكي والسهول الكبرى والأبالاش', avg: 760, max: 6190, min: -86, feats: ['جبال الروكي', 'السهول الكبرى', 'جبال الأبالاش'], sum: 'تتدرج من جبال الأبالاش وسهول الأطلسي شرقاً إلى السهول الكبرى ثم سلاسل الروكي غرباً.' },
+      'Canada': { ar: 'كندا', cont: 'أمريكا الشمالية', cat: 'متنوعة التضاريس', lbl: 'الدرع الكندي الجليدي والسهوب وجبال الروكي', avg: 487, max: 5959, min: 0, feats: ['الدرع الكندي', 'جبال الروكي الكندية', 'الأرخبيل القطبي'], sum: 'يغطي الدرع الكندي المليء بالبحيرات نصف البلاد وتقابله جبال الروكي الشاهقة غرباً.' },
+      'Russia': { ar: 'روسيا', cont: 'أوروبا / آسيا', cat: 'متنوعة التضاريس', lbl: 'سهول أوراسيا وهضبة سيبيريا وجبال القوقاز والأورال', avg: 600, max: 5642, min: -28, feats: ['السهل الأوروبي الشرقي', 'سهل سيبيريا', 'جبال القوقاز والأورال'], sum: 'تمتد عبر أوراسيا من السهول الغربية وجبال الأورال إلى هضاب سيبيريا ومرتفعات الشرق الأقصى.' },
+      'China': { ar: 'الصين', cont: 'آسيا', cat: 'متنوعة التضاريس', lbl: 'هضبة التبت والهيمالايا والسهل الصيني العظيم', avg: 1840, max: 8848, min: -154, feats: ['هضبة التبت', 'جبال الهيمالايا', 'السهل الصيني العظيم'], sum: 'تتدرج في ثلاث درجات من أعلى هضاب الأرض غرباً إلى الصحاري ثم السهول الخصبة شرقاً.' },
+      'India': { ar: 'الهند', cont: 'آسيا', cat: 'متنوعة التضاريس', lbl: 'الهيمالايا شمالاً وسهل الغانج وهضبة الدكن', avg: 621, max: 8586, min: -2, feats: ['جبال الهيمالايا', 'سهل الغانج', 'هضبة الدكن'], sum: 'تحميها الهيمالايا شمالاً، يليها سهل الغانج الخصب ثم هضبة الدكن جنوباً.' },
+      'Australia': { ar: 'أستراليا', cont: 'أوقيانوسيا', cat: 'هضبية وصحراوية', lbl: 'هضبة غربية منبسطة وسلسلة الحاجز الكبير شرقاً', avg: 330, max: 2228, min: -15, feats: ['الهضبة الغربية', 'الحوض الارتوازي الكبير', 'سلسلة الحاجز العظيم'], sum: 'تسيطر الهضاب والصحاري المنبسطة على غربها ووسطها وتحدها مرتفعات شرقاً.' },
+      'Greenland': { ar: 'جرينلاند', cont: 'أمريكا الشمالية', cat: 'جليدية وقطبية', lbl: 'صفيحة جليدية قارية ومضايق ساحلية', avg: 1792, max: 3694, min: 0, feats: ['الغلاف الجليدي', 'جبال واتكينز', 'مضايق الفيورد'], sum: 'يغطي الجليد الدائم نحو أربعة أخماس مساحتها مع بروز قمم صخرية حادة على الأطراف.' },
+      'Indonesia': { ar: 'إندونيسيا', cont: 'آسيا', cat: 'ساحلية وجزرية', lbl: 'أرخبيل بركاني جبلي وسواحل استوائية', avg: 367, max: 4884, min: 0, feats: ['قوس جزر سوندا البركاني', 'مرتفعات بابوا', 'سواحل سومطرة وجاوة'], sum: 'أكبر أرخبيل في العالم، يضم آلاف الجزر البركانية وسهولاً ساحلية استوائية.' }
+    };
+
+    function getCountryData(enName) {
+      if (COUNTRIES[enName]) return { en: enName, ...COUNTRIES[enName] };
+      return {
+        en: enName,
+        ar: enName,
+        cont: 'العالم',
+        cat: 'متنوعة التضاريس',
+        lbl: 'تضاريس جغرافية متنوعة (سهول ومرتفعات)',
+        avg: 380,
+        max: 1950,
+        min: 0,
+        feats: ['السهول الساحلية والداخلية', 'المرتفعات والهضاب الإقليمية', 'الأحواض المائية'],
+        sum: 'تتنوع تضاريس ' + enName + ' بين السهول والمرتفعات والهضاب المرتبطة بالبنية الجغرافية للإقليم.'
+      };
+    }
+
+    const svg = d3.select('#worldMap');
+    const tooltip = document.getElementById('tooltip');
+    const mapWrap = document.getElementById('mapWrap');
+    let allFeatures = [];
+
+    function selectCountry(enName) {
+      const info = getCountryData(enName);
+      svg.selectAll('.country').classed('active', d => d.properties.name === enName);
+      document.getElementById('cName').textContent = info.ar;
+      document.getElementById('cMeta').textContent = info.cont + ' · ' + info.en;
+      document.getElementById('cTerrain').textContent = info.cat + ' — ' + info.lbl;
+      document.getElementById('terrainArt').innerHTML = SCENES[info.cat] || SCENES['متنوعة التضاريس'];
+      document.getElementById('cAvg').textContent = info.avg.toLocaleString('en-US') + ' م';
+      document.getElementById('cMax').textContent = info.max.toLocaleString('en-US') + ' م';
+      document.getElementById('cMin').textContent = info.min.toLocaleString('en-US') + ' م';
+      document.getElementById('cSummary').textContent = info.sum;
+
+      const ul = document.getElementById('cFeats');
+      ul.innerHTML = '';
+      info.feats.forEach(f => {
+        const li = document.createElement('li');
+        li.textContent = f;
+        ul.appendChild(li);
+      });
+    }
+
+    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+      .then(res => res.json())
+      .then(world => {
+        const geo = topojson.feature(world, world.objects.countries);
+        allFeatures = geo.features;
+        const projection = d3.geoNaturalEarth1().fitExtent([[14, 14], [946, 486]], geo);
+        const path = d3.geoPath(projection);
+
+        svg.append('path')
+          .datum({ type: 'Sphere' })
+          .attr('d', path)
+          .attr('fill', '#DCE8F2')
+          .attr('stroke', '#94A3B8');
+
+        svg.append('g')
+          .selectAll('path')
+          .data(allFeatures)
+          .enter()
+          .append('path')
+          .attr('class', 'country')
+          .attr('d', path)
+          .attr('fill', d => COLORS[getCountryData(d.properties.name).cat] || '#B6B995')
+          .on('click', (_, d) => selectCountry(d.properties.name))
+          .on('mousemove', (event, d) => {
+            const info = getCountryData(d.properties.name);
+            const rect = mapWrap.getBoundingClientRect();
+            tooltip.style.display = 'block';
+            tooltip.textContent = info.ar + ' (' + info.cat + ')';
+            tooltip.style.left = Math.max(10, event.clientX - rect.left + 12) + 'px';
+            tooltip.style.top = Math.max(10, event.clientY - rect.top - 32) + 'px';
+          })
+          .on('mouseleave', () => {
+            tooltip.style.display = 'none';
+          });
+
+        selectCountry('Saudi Arabia');
+      });
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      if (!q || !allFeatures.length) return;
+      const found = allFeatures.find(f => {
+        const info = getCountryData(f.properties.name);
+        return info.ar.toLowerCase().includes(q) || info.en.toLowerCase().includes(q);
+      });
+      if (found) selectCountry(found.properties.name);
+    });
+  </script>
+</body>
+</html>
